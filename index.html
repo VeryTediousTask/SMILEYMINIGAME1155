@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<!-- 
+    PROJECT: THE REDMAN BREACH
+    DEVELOPER: VeryTediousTask
+    LORE: "He understood... the anomaly doesn't think, it reacts."
+-->
+<head>
+    <style>
+        body { margin: 0; height: 100vh; overflow: hidden; background: #f0f0f0; font-family: 'Courier New', Courier, monospace; display: flex; justify-content: center; align-items: center; transition: background 0.1s; }
+        h1 { color: #333; pointer-events: none; user-select: none; z-index: 100; text-align: center; font-family: sans-serif; }
+        .smiley { position: absolute; font-size: 40px; cursor: default; user-select: none; z-index: 1; transition: left 0.2s ease-out, top 0.2s ease-out; }
+        
+        #redman-container { position: absolute; bottom: 20px; right: 20px; display: flex; flex-direction: column; align-items: center; cursor: pointer; z-index: 200; }
+        #redman { width: 50px; height: 50px; background: red; border: 2px solid #900; box-shadow: 0 0 10px rgba(255,0,0,0.5); }
+        #sign { background: white; border: 1px solid black; padding: 5px; font-size: 12px; margin-top: 5px; width: 140px; text-align: center; pointer-events: none; color: black; font-weight: bold; }
+        
+        #epilepsy-warning { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.8); color: yellow; border: 2px solid red; padding: 10px; font-size: 10px; font-weight: bold; z-index: 5000; pointer-events: none; max-width: 150px; }
+        #flashbang { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: white; opacity: 0; z-index: 4000; pointer-events: none; }
+        .flash-active { opacity: 1 !important; transition: none !important; }
+        .flash-fade { opacity: 0 !important; transition: opacity 6s ease-out !important; }
+
+        /* AUTHENTIC VHS OVERLAY */
+        #vhs-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1500; display: none; overflow: hidden; }
+        
+        /* Scanlines */
+        #vhs-screen::after { 
+            content: " "; 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); 
+            background-size: 100% 4px, 3px 100%; 
+            pointer-events: none; 
+        }
+
+        /* Tracking Glitch Line */
+        @keyframes tracking { 0% { top: -10%; } 100% { top: 110%; } }
+        .vhs-tracking { position: absolute; width: 100%; height: 10px; background: rgba(255, 255, 255, 0.1); filter: blur(5px); animation: tracking 8s linear infinite; opacity: 0.3; }
+
+        .void-text { position: absolute; color: white; font-size: 2.5rem; font-weight: bold; display: none; z-index: 1000; text-align: center; width: 80%; text-shadow: 3px 0 0 red, -3px 0 0 blue; letter-spacing: 2px; filter: blur(0.5px); }
+        
+        #meter-container { position: absolute; color: white; display: none; z-index: 1000; flex-direction: column; top: 10%; left: 10%; filter: drop-shadow(2px 2px 0px blue) drop-shadow(-2px -1px 0px red); }
+        #count { font-size: 4rem; text-shadow: 3px 3px #000; font-weight: bold; }
+        
+        #bsod { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0078d7; color: white; display: none; z-index: 6000; font-family: 'Segoe UI', sans-serif; padding: 8% 12%; box-sizing: border-box; text-align: left; }
+        #bsod .emoticon { font-size: 8rem; font-weight: 100; line-height: 1; margin-bottom: 20px; }
+        #bsod .text { font-size: 1.8rem; line-height: 1.4; max-width: 800px; font-weight: 300; }
+        #bsod .info { font-size: 1rem; color: rgba(255,255,255,0.8); margin-top: 15px; }
+
+        @keyframes fastStrobe { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+        .strobe-effect { animation: fastStrobe 0.2s steps(1) infinite; }
+        
+        @keyframes jitter { 0% { transform: translate(0,0); } 10% { transform: translate(-2px, -1px); } 20% { transform: translate(2px, 1px); } 100% { transform: translate(0,0); } }
+        .vhs-jitter { animation: jitter 0.05s infinite; }
+    </style>
+</head>
+<body>
+    <div id="epilepsy-warning">WARNING: FLASHING LIGHTS.</div>
+    <div id="flashbang"></div>
+    <div id="vhs-screen"><div class="vhs-tracking"></div></div>
+
+    <div id="bsod">
+        <div class="emoticon">:)</div>
+        <div class="text">Your PC ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+        <div class="info">Stop code: REDDUDECOOL_ANOMALY_BREACH</div>
+        <div class="info" style="margin-top:15px; font-style: italic; opacity: 0.5;">goodbye</div>
+    </div>
+
+    <h1 id="main-title">touch a smiley face to win!!</h1>
+    <div id="redman-container" onclick="triggerHell()">
+        <div id="redman"></div>
+        <div id="sign">this is redman01, please dont touch him</div>
+    </div>
+    <div id="dialogue" class="void-text vhs-jitter"></div>
+    <div id="meter-container" class="vhs-jitter">
+        <div id="meter-label">POPULATION COUNT</div>
+        <div id="count">30</div>
+    </div>
+
+    <script>
+        console.log("Dev: VeryTediousTask. Consumed by the woods. He understands.");
+        let audioCtx;
+        const smileys = [];
+
+        for (let i = 0; i < 30; i++) {
+            const el = document.createElement('div');
+            el.className = 'smiley'; el.innerHTML = '🙂';
+            const s = { el, x: Math.random() * (window.innerWidth - 60), y: Math.random() * (window.innerHeight - 60) };
+            el.style.left = s.x + 'px'; el.style.top = s.y + 'px';
+            document.body.appendChild(el); smileys.push(s);
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            smileys.forEach(s => {
+                const dx = s.x + 25 - e.clientX; const dy = s.y + 25 - e.clientY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 160) {
+                    const angle = Math.atan2(dy, dx); const push = (160 - dist) + 40;
+                    s.x += Math.cos(angle) * push; s.y += Math.sin(angle) * push;
+                    if (s.x < -50 || s.x > window.innerWidth || s.y < -50 || s.y > window.innerHeight) {
+                        s.x = Math.random() * (window.innerWidth - 60); s.y = Math.random() * (window.innerHeight - 60);
+                    }
+                    s.el.style.left = s.x + 'px'; s.el.style.top = s.y + 'px';
+                }
+            });
+        });
+
+        function playStatic() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const bufferSize = 2 * audioCtx.sampleRate;
+            const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+            const output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) { output[i] = Math.random() * 2 - 1; }
+            const whiteNoise = audioCtx.createBufferSource();
+            whiteNoise.buffer = noiseBuffer; whiteNoise.loop = true;
+            const gainNode = audioCtx.createGain(); gainNode.gain.setValueAtTime(0.01, audioCtx.currentTime);
+            whiteNoise.connect(gainNode); gainNode.connect(audioCtx.destination);
+            whiteNoise.start();
+        }
+
+        function triggerHell() {
+            playStatic();
+            const flash = document.getElementById('flashbang');
+            flash.classList.add('flash-active');
+            smileys.forEach(s => s.el.style.display = 'none');
+            document.getElementById('redman-container').style.display = 'none';
+            document.getElementById('main-title').style.display = 'none';
+            document.body.style.background = "black";
+            setTimeout(() => {
+                flash.classList.remove('flash-active'); flash.classList.add('flash-fade');
+                setTimeout(() => { 
+                    document.getElementById('vhs-screen').style.display = 'block'; 
+                    startDialogue(); 
+                }, 5000);
+            }, 500); 
+        }
+
+        function startDialogue() {
+            const diag = document.getElementById('dialogue');
+            const lines = ["i told you.. dont touch him.", "youve doomed us all..", "HIDE, RUN, DO ANYTHING TO ESCAPE."];
+            let i = 0;
+            function showNextLine() {
+                if (i < lines.length) {
+                    diag.innerHTML = lines[i]; diag.style.display = 'block'; diag.classList.add('strobe-effect');
+                    setTimeout(() => { diag.style.display = 'none'; i++; setTimeout(showNextLine, 800); }, 2500);
+                } else { startCountdown(); }
+            }
+            showNextLine();
+        }
+
+        function startCountdown() {
+            const container = document.getElementById('meter-container');
+            const counter = document.getElementById('count');
+            container.style.display = 'flex';
+            let population = 30;
+            const interval = setInterval(() => {
+                population--; counter.innerText = population;
+                if (population <= 0) {
+                    clearInterval(interval);
+                    counter.innerText = "0"; counter.style.color = "red";
+                    playDreamcoreSynth();
+                    setTimeout(() => {
+                        document.getElementById('bsod').style.display = 'block';
+                        setTimeout(() => {
+                            window.close();
+                            window.location.replace("about:blank");
+                        }, 400);
+                    }, 2000);
+                }
+            }, 25);
+        }
+
+        function playDreamcoreSynth() {
+            const gain = audioCtx.createGain();
+            [110, 146.83, 164.81].forEach(freq => {
+                const osc = audioCtx.createOscillator();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                osc.frequency.linearRampToValueAtTime(freq * 0.95, audioCtx.currentTime + 6);
+                osc.connect(gain); osc.start(); osc.stop(audioCtx.currentTime + 6);
+            });
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 6);
+            gain.connect(audioCtx.destination);
+        }
+    </script>
+</body>
+</html>
